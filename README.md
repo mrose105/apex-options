@@ -4,7 +4,7 @@
 
 **Stack:** Python - NumPy - SciPy - Alpaca Markets API - Black-Scholes - Monte Carlo 
 **Data:** 10 years real SPY/QQQ/PLTR/NVDA daily + intraday bars via Alpaca 
-**Approach:** Hypothesis ' backtest ' diagnose failure ' redesign ' repeat
+**Approach:** Hypothesis -> backtest -> diagnose failure -> redesign -> repeat
 
 ---
 
