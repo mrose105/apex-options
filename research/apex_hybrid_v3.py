@@ -64,15 +64,15 @@ VOL_HIGH   = 0.30   # above this = danger zone
 
 # Position size multipliers per vol regime
 # Bull RR (selling puts) — scale hard in low vol, cautious in high vol
-BULL_SIZE_EASY   = 3.0   # 3× base when VIX low + bull
+BULL_SIZE_EASY   = 4.0   # 4× base when VIX low + bull (2017/2021 melt-up mode)
 BULL_SIZE_NORMAL = 1.5   # 1.5× base in normal vol
 BULL_SIZE_HARD   = 0.5   # 0.5× base in high vol (market can still rip)
 
 # Bear spread (buying puts) — scale hard in high vol, skip in low vol
 BEAR_SIZE_EASY   = 0.0   # skip bear spreads in low vol (puts too expensive, bounce likely)
 BEAR_SIZE_NORMAL = 1.0   # base in normal vol
-BEAR_SIZE_HARD   = 2.5   # 2.5× in high vol (puts cheap relative to realized move)
-BEAR_SIZE_CRISIS = 3.5   # 3.5× in crisis vol (maximum fear = maximum edge on puts)
+BEAR_SIZE_HARD   = 1.5   # 1.5× in high vol (measured increase)
+BEAR_SIZE_CRISIS = 2.0   # 2.0× in crisis vol (disciplined — edge exists but vol is high)
 
 # Sizing
 RISK_PCT       = 0.02          # 2% portfolio per position (base)
@@ -129,11 +129,27 @@ def load_data(tickers, start, end):
     return data,"synthetic"
 
 def get_regime(hist):
-    if len(hist)<SMA_WINDOW: return "neutral"
-    c=hist["close"].values
-    sma=c[-SMA_WINDOW:].mean(); last=c[-1]
-    if last>sma*(1+REGIME_BAND): return "bull"
-    if last<sma*(1-REGIME_BAND): return "bear"
+    if len(hist)<SMA_WINDOW+5: return "neutral"
+    c   = hist["close"].values
+    sma = c[-SMA_WINDOW:].mean()
+    last = c[-1]
+
+    if last > sma*(1+REGIME_BAND): return "bull"
+
+    if last < sma*(1-REGIME_BAND):
+        # Bear CONFIRMATION filters — prevent buying puts into shallow dips
+        # Filter 1: 5-day momentum must be negative (price falling, not just below SMA)
+        mom_5d = (c[-1] - c[-6]) / c[-6]
+        # Filter 2: realized vol must be elevated (real fear, not quiet drift)
+        rv_10  = np.std(np.diff(np.log(c[-11:])), ddof=1) * np.sqrt(252)
+        # Filter 3: must be at least 3% off recent 20-day high (not just a dip)
+        high_20 = c[-20:].max()
+        pct_off_high = (last - high_20) / high_20
+
+        if mom_5d < -0.005 and rv_10 > 0.13 and pct_off_high < -0.03:
+            return "bear"
+        return "neutral"   # shallow dip → skip
+
     return "neutral"
 
 def est_iv(closes,window=21):
@@ -353,10 +369,11 @@ def run(data, capital, start, end):
 
             # Vol-scaled sizing: go HARD when market is hard
             hv, vol_env, _, bear_mult = vol_regime(h["close"].values)
+            # In bear regime, low-vol skips already filtered by regime confirmation
+            # Override: if vol is low but we made it here, treat as normal
             if bear_mult == 0.0:
-                log.info(f"  {today} SKIP  BEAR-SPD [{vol_env} vol={hv:.0%}] "
-                         f"— low vol, puts too expensive")
-                continue
+                bear_mult = 1.0
+                vol_env   = "normal"
             scaled_risk = risk * bear_mult
             if debit <= 0.01: continue
             contracts = max(1,int(scaled_risk/(debit*100)))
@@ -432,7 +449,7 @@ def report(trades,equity,capital,start,end):
 
     print()
     print("="*70)
-    print("APEX-HYBRID v2  —  Vol-Scaled: Bull RR + Bear Put Spread on SPY")
+    print("APEX-HYBRID v3  —  Vol-Scaled + Bear Confirmation Filters")
     print(f"  BULL: SELL ATM put + BUY {BULL_CALL_OTM:.0%} OTM call  → net credit")
     print(f"  BEAR: BUY ATM put + SELL {BEAR_SPREAD_W:.0%} OTM put   → defined risk")
     print(f"  NEUTRAL: no position")
@@ -517,7 +534,7 @@ def plot(trades,equity,stats,capital,out):
         BG="#0d1117";PAN="#161b22";GR="#22c55e";RD="#ef4444"
         BL="#3b82f6";YL="#eab308";OR="#f97316";MU="#94a3b8";WH="#f1f5f9"
         fig=plt.figure(figsize=(20,12),facecolor=BG)
-        fig.suptitle("APEX-HYBRID v2  —  Vol-Scaled: Bull RR + Bear Put Spread on SPY",
+        fig.suptitle("APEX-HYBRID v3  —  Vol-Scaled + Bear Confirmation Filters",
                      color=WH,fontsize=13,fontweight="bold",y=0.98)
         gs=gridspec.GridSpec(2,3,figure=fig,hspace=0.42,wspace=0.32)
 
