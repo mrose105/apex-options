@@ -259,7 +259,7 @@ Ruin         0.03%
 Profitable  99.99%
 ```
 
-**On the gap between actual and MC:** The actual path came in at +9.5% CAGR, well below the MC median of +34.2%. That gap is real and worth explaining. The bootstrap resamples trade returns independently, it doesn't know that losses cluster during regime transitions. The actual path hit three bad clusters: 2023 choppy recovery, January 2024, January 2025. Under i.i.d. sampling those losses get spread randomly across paths. The MC median tells you what happens in an average draw. The actual path tells you what happens when the market goes through a rough regime shift. I report both.
+**On the gap between actual and MC:** The actual path came in at +9.5% CAGR, well below the MC median of +34.2%. That gap is real and worth explaining. The bootstrap resamples trade returns independently, it doesn't know that losses cluster during regime transitions. The actual path hit three bad clusters: 2023 choppy recovery, January 2024, January 2025. Under independent sampling those losses get spread randomly across paths. The MC median tells you what happens in an average draw. The actual path tells you what happens when the market goes through a rough regime shift. I report both.
 
 ---
 
