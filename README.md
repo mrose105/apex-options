@@ -4,7 +4,7 @@
 
 **Stack:** Python - NumPy - SciPy - Alpaca Markets API - Black-Scholes - Monte Carlo 
 **Data:** 10 years real SPY/QQQ/PLTR/NVDA daily + intraday bars via Alpaca 
-**Approach:** Hypothesis -> backtest -> diagnose failure -> redesign -> repeat
+**Approach:** Hypothesis ' backtest ' diagnose failure ' redesign ' repeat
 
 ---
 
@@ -64,7 +64,7 @@ Strong DN (<-0.3%) 25 64% -0.211%
 
 **Hypothesis:** The overnight gap between NQ futures close and QQQ open carries predictive information. Specific gap size zones have asymmetric win rates - some favor continuation, others fade.
 
-### Zone Map (empirically derived, 2016-2025)
+### Zone Map (empirically derived, 2016"2025)
 
 ```
 Gap Size Zone Signal Condition
@@ -89,7 +89,7 @@ Filter effect: 82% of UP_BIG_FADE put signals blocked
 ### Backtest Results (9 years, real QQQ data)
 
 ```
-Period: 2016-2025
+Period: 2016"2025
 CAGR: +0.9% Max DD: 4.6% Sharpe: 2.28
 Trades: 9/year WR: 33.3% PF: 2.28
 ```
@@ -105,14 +105,14 @@ Each iteration was driven by a specific empirically identified failure - not aes
 ### Iteration 1: Symmetric Risk Reversal
 
 ```
-BULL: SELL ATM put + BUY 3% OTM call -> net credit
-BEAR: SELL ATM call + BUY 3% OTM put -> small debit
+BULL: SELL ATM put + BUY 3% OTM call ' net credit
+BEAR: SELL ATM call + BUY 3% OTM put ' small debit
 ```
 
-**Real data result (2018-2025):**
+**Real data result (2018"2025):**
 ```
-BULL: N=168 WR=58.9% PnL=+$440,826  [BULL]
-BEAR: N= 96 WR=40.6% PnL=-$443,912  [BEAR] exactly cancels bull
+BULL: N=168 WR=58.9% PnL=+$440,826 "
+BEAR: N= 96 WR=40.6% PnL=-$443,912 " exactly cancels bull
 CAGR: +48.1% but bear side is structural bleed
 ```
 
